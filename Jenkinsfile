@@ -4,6 +4,7 @@ pipeline {
     tools {
         jdk 'jdk17'       // Ensure 'jdk17' is configured in Global Tool Config
         maven 'maven3'    // Ensure 'maven3' is configured in Global Tool Config
+        git 'Default'
     }
 
     environment {
