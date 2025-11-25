@@ -28,8 +28,7 @@ pipeline {
         stage("Checkout SCM") {
             steps {
                 git branch: 'main',
-                    credentialsId: 'github',
-                    url: 'https://github.com/TCRDINSEH/register-app.git'
+                url: 'https://github.com/TCRDINSEH/register-app.git'
             }
         }
 
@@ -43,7 +42,7 @@ pipeline {
 
         stage("SonarQube Analysis") {
             steps {
-                withSonarQubeEnv('sonarqube-server') {
+                withSonarQubeEnv('sonar-server') {
                     sh 'mvn sonar:sonar'
                 }
             }
