@@ -2,8 +2,8 @@ pipeline {
     agent any
 
     tools {
-        jdk 'jdk17'
-        maven 'maven3'
+        jdk 'jdk17'       // Ensure 'jdk17' is configured in Global Tool Config
+        maven 'maven3'    // Ensure 'maven3' is configured in Global Tool Config
     }
 
     environment {
@@ -15,8 +15,6 @@ pipeline {
 
         IMAGE_NAME = "${DOCKER_USER}/${APP_NAME}"
         IMAGE_TAG = "${RELEASE}-${BUILD_NUMBER}"
-
-        // JENKINS_API_TOKEN = credentials("JENKINS_API_TOKEN")
     }
 
     stages {
@@ -28,7 +26,7 @@ pipeline {
         stage("Checkout SCM") {
             steps {
                 git branch: 'main',
-                url: 'https://github.com/TCRDINSEH/register-app.git'
+                    url: 'https://github.com/TCRDINSEH/register-app.git'
             }
         }
 
@@ -90,29 +88,31 @@ pipeline {
             }
         }
 
-    //     stage("Trigger CD Pipeline") {
-    //         steps {
-    //             sh """
-    //             curl -X POST -u clouduser:${JENKINS_API_TOKEN} \
-    //             "http://ec2-13-232-128-192.ap-south-1.compute.amazonaws.com:8080/job/gitops-register-app-cd/buildWithParameters?token=gitops-token&IMAGE_TAG=${IMAGE_TAG}"
-    //             """
-    //         }
-    //     }
-     }
+        stage("Trigger CD Pipeline") {
+            steps {
+                withCredentials([string(credentialsId: 'JENKINS_API_TOKEN', variable: 'TOKEN')]) {
+                    sh """
+                    curl -X POST -u clouduser:${TOKEN} \
+                    "http://ec2-13-232-128-192.ap-south-1.compute.amazonaws.com:8080/job/gitops-register-app-cd/buildWithParameters?token=gitops-token&IMAGE_TAG=${IMAGE_TAG}"
+                    """
+                }
+            }
+        }
+    }
 
     post {
         success {
             emailext(
                 subject: "${JOB_NAME} - Build #${BUILD_NUMBER} SUCCESS",
                 to: "dineshrgopal89@gmail.com",
-                body: '${SCRIPT, template="groovy-html.template"}'
+                body: "Build succeeded for ${JOB_NAME} #${BUILD_NUMBER}. Docker image: ${IMAGE_NAME}:${IMAGE_TAG}"
             )
         }
         failure {
             emailext(
                 subject: "${JOB_NAME} - Build #${BUILD_NUMBER} FAILED",
                 to: "dineshrgopal89@gmail.com",
-                body: '${SCRIPT, template="groovy-html.template"}'
+                body: "Build failed for ${JOB_NAME} #${BUILD_NUMBER}. Please check Jenkins logs."
             )
         }
     }
